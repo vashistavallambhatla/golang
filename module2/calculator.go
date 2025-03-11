@@ -1,48 +1,60 @@
 package main
 
 import (
-    "fmt"
     "errors"
+    "fmt"
 )
 
-func Sum(a int,b int) int {
-    return a+b
+func Sum(a, b int) int {
+    return a + b
 }
-func Subtract(a int,b int) int {
-    return a-b
+
+func Subtract(a, b int) int {
+    return a - b
 }
-func Multiply(a int,b int) int {
-    return a*b
+
+func Multiply(a, b int) int {
+    return a * b
 }
-func Divide(a int,b int) (int,error) {
+
+func Divide(a, b int) (int, error) {
     if b == 0 {
-        return 0, errors.New("Can't divide by zero")
+        return 0, errors.New("can't divide by zero")
     }
-    return a/b , nil
+    return a / b, nil
 }
+
 func calculator() {
-    fmt.Println("Enter the first number:")
-    var a int
-    fmt.Scanf("%d",&a)
-    fmt.Println("Enter the second number:")
-    var b int 
-    fmt.Scanf("%d",&b)
-    fmt.Println("Enter the operation:")
+    var a, b int
     var operation string
-    fmt.Scanf("%s",&operation)
-    
-    if operation == "addition" {
-        fmt.Println("The sum of the given numbers is : %d\n",Sum(a,b))
-    } else if operation == "subtraction" {
-        fmt.Println("The subtraction of the given numbers is : %d\n",Subtract(a,b))
-    } else if operation == "multiplication" {
-        fmt.Println("The product of the given numbers is : %d\n",Multiply(a,b))
-    } else if operation == "division" {
-       result,err := Divide(a,b)
-        if err != nil {
+
+    fmt.Print("Enter the first number: ")
+    fmt.Scanf("%d", &a)
+
+    fmt.Print("Enter the second number: ")
+    fmt.Scanf("%d", &b)
+
+    fmt.Print("Enter the operation (add, subtract, multiply, divide): ")
+    fmt.Scanf("%s", &operation)
+
+    switch operation {
+    case "add":
+        fmt.Printf("The sum of the given numbers is: %d\n", Sum(a, b))
+    case "subtract":
+        fmt.Printf("The subtraction of the given numbers is: %d\n", Subtract(a, b))
+    case "multiply":
+        fmt.Printf("The product of the given numbers is: %d\n", Multiply(a, b))
+    case "divide":
+        if result, err := Divide(a, b); err != nil {
             fmt.Println(err)
-        }else {
-            fmt.Println("The result of division : %d\n",result)
+        } else {
+            fmt.Printf("The result of division is: %d\n", result)
         }
+    default:
+        fmt.Println("Invalid operation. Please enter a valid operation.")
     }
+}
+
+func main() {
+    calculator()
 }
