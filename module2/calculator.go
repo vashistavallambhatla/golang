@@ -55,6 +55,3 @@ func calculator() {
     }
 }
 
-func main() {
-    calculator()
-}

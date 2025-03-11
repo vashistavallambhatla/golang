@@ -29,3 +29,7 @@ func fileReader() {
 		}
 	}
 }
+
+func main() {
+	fileReader()
+}
