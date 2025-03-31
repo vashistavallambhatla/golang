@@ -20,7 +20,7 @@ func (q *Queue[T]) Enqueue(ele T) {
 func (q *Queue[T]) Dequeue() (T,error) {
 	if len(q.elements) == 0 {
 		var zeroValue T
-		return zeroValue,errors.New("Empty Queue")
+		return zeroValue,errors.New("empty Queue")
 	}
 
 	res := q.elements[0]

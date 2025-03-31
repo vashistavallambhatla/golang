@@ -186,3 +186,4 @@ func (c *Car) isAvailable(startDate, endDate time.Time) bool {
 	}
 	return true
 }
+
