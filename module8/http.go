@@ -12,7 +12,6 @@ func LongRunningTask(done chan bool){
 	time.Sleep(5 * time.Second)
 	fmt.Println("Process completed")
 	done <- true
-	close(done)
 }
 
 func ProcessHandler(w http.ResponseWriter, r * http.Request) {
@@ -20,6 +19,8 @@ func ProcessHandler(w http.ResponseWriter, r * http.Request) {
 	defer cancel()
 	
 	done := make(chan bool) 
+	defer close(done)
+	
 	go LongRunningTask(done)
 
 	select { 

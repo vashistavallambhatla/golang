@@ -12,12 +12,12 @@ func doWork(done chan bool){
 	done <- true
 }
 
-func main() {
-	done := make(chan bool)
+// func main() {
+// 	done := make(chan bool)
 
-	go doWork(done)
+// 	go doWork(done)
 
-	<-done
+// 	<-done
 
-	fmt.Println("Main completed!")
-}
+// 	fmt.Println("Main completed!")
+// }
