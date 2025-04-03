@@ -9,18 +9,18 @@ import (
 
 func LongRunningTask(done chan bool){
 	fmt.Println("Process started running..")
-	time.Sleep(5 * time.Second)
+	
 	fmt.Println("Process completed")
 	done <- true
 }
 
 func ProcessHandler(w http.ResponseWriter, r * http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(),7 * time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(),5 * time.Second)
 	defer cancel()
 	
 	done := make(chan bool) 
 	defer close(done)
-	
+
 	go LongRunningTask(done)
 
 	select { 
