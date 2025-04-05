@@ -6,15 +6,15 @@ import (
 )
 
 type Car struct {
-	ID             int
-	Make           string
-	Model          string
-	Year           int
-	LicensePlate  string  // PascalCase for struct fields instead of License_plate
-	PricePerDay  float64
-	IsAvailable      bool  // Changed Available to IsAvailable for better readability
-	Bookings       []BookingPeriod
-	CarType        string
+	ID            int
+	Make          string
+	Model         string
+	Year          int
+	LicensePlate  string
+	PricePerDay   float64
+	IsAvailable   bool
+	Bookings      []BookingPeriod
+	CarType       string
 }
 
 type BookingPeriod struct {
@@ -24,9 +24,9 @@ type BookingPeriod struct {
 
 type Customer struct {
 	ID      int
-	Name     string
-	Contact  string
-	License  string
+	Name    string
+	Contact string
+	License string
 }
 
 type Reservation struct {
@@ -56,26 +56,24 @@ func NewCarRentalSystem() *CarRentalSystem {
 	}
 }
 
-// changed functions to lowercase since they're not being exported
-// Changed the receiver's name from rental to crs to keep it simple
-func (crs *CarRentalSystem) addCar(make string, model string, year int, licensePlate string, pricePerDay float64, carType string) { // Changed license_plate to licensePlate to follow camelCase
+func (crs *CarRentalSystem) addCar(make, model string, year int, licensePlate string, pricePerDay float64, carType string) error {
 	id := crs.nextCarId
 	crs.nextCarId++
 	crs.cars[id] = &Car{
-		ID:            id,
-		Make:          make,
-		Model:         model,
-		Year:          year,
+		ID:           id,
+		Make:         make,
+		Model:        model,
+		Year:         year,
 		LicensePlate: licensePlate,
-		PricePerDay: pricePerDay,
-		IsAvailable:     true,
-		// Bookings:      []BookingPeriod{}, removed unecessary declaration since go handles nil values properly
-		CarType:       carType,
+		PricePerDay:  pricePerDay,
+		IsAvailable:  true,
+		CarType:      carType,
 	}
+	return nil
 }
 
-func (crs *CarRentalSystem) addCustomer(name, contact, license string) {
-	id := crs.nextCarId // apparently rental.nextCustomerId++ should happen after storing its value to avoid potential issues in concurrent scenarios.
+func (crs *CarRentalSystem) addCustomer(name, contact, license string) error {
+	id := crs.nextCustomerId
 	crs.nextCustomerId++
 	crs.customers[id] = &Customer{
 		ID:      id,
@@ -83,18 +81,17 @@ func (crs *CarRentalSystem) addCustomer(name, contact, license string) {
 		Contact: contact,
 		License: license,
 	}
+	return nil
 }
 
-func (crs *CarRentalSystem) makeReservation(carId, customerId int, startDate, endDate time.Time) {
+func (crs *CarRentalSystem) makeReservation(carId, customerId int, startDate, endDate time.Time) error {
 	car, exists := crs.cars[carId]
 	if !exists {
-		fmt.Println("Car not found")
-		return
+		return fmt.Errorf("car not found")
 	}
 
 	if !car.isAvailable(startDate, endDate) {
-		fmt.Println("Car is not available for the selected dates")
-		return
+		return fmt.Errorf("car is not available for the selected dates")
 	}
 
 	id := crs.nextReservationId
@@ -113,63 +110,59 @@ func (crs *CarRentalSystem) makeReservation(carId, customerId int, startDate, en
 	}
 
 	car.Bookings = append(car.Bookings, BookingPeriod{StartDate: startDate, EndDate: endDate})
+	return nil
 }
 
-func (crs *CarRentalSystem) modifyReservation(reservationId int, startDate, endDate time.Time) {
+func (crs *CarRentalSystem) modifyReservation(reservationId int, startDate, endDate time.Time) error {
 	reservation, exists := crs.reservations[reservationId]
 	if !exists {
-		fmt.Println("Reservation not found")
-		return
-	}
-
-	car, exists := crs.cars[reservation.CarId] // Added go's ok idiom for this map lookup
-	if !exists {
-		fmt.Println("Car not found")
-		return 
-	}
-
-	if !car.isAvailable(startDate,endDate) { // Early return if the modification is not possible
-		fmt.Println("Car not available on these days")
-		return
-	}
-
-	for i, booking := range car.Bookings {
-		if booking.StartDate.Equal(reservation.StartDate) && booking.EndDate.Equal(reservation.EndDate) { // Used Equal instead of == for better time zone comparison
-			reservation.StartDate = startDate
-	        reservation.EndDate = endDate
-			car.Bookings[i] = BookingPeriod{StartDate: startDate, EndDate: endDate}
-			fmt.Printf("Reservation dates successfully changed to %v - %v\n", startDate, endDate)
-			return
-		}
-	}
-}
-
-func (crs *CarRentalSystem) cancelReservation(reservationId int) {
-	reservation, exists := crs.reservations[reservationId]
-	if !exists {
-		fmt.Println("Reservation not found")
-		return
+		return fmt.Errorf("reservation not found")
 	}
 
 	car, exists := crs.cars[reservation.CarId]
 	if !exists {
-		fmt.Println("Car not found")
-		return
+		return fmt.Errorf("car not found")
+	}
+
+	if !car.isAvailable(startDate, endDate) {
+		return fmt.Errorf("car is not available for the selected dates")
 	}
 
 	for i, b := range car.Bookings {
-		if b.StartDate == reservation.StartDate && b.EndDate == reservation.EndDate {
+		if b.StartDate.Equal(reservation.StartDate) && b.EndDate.Equal(reservation.EndDate) {
+			reservation.StartDate = startDate
+			reservation.EndDate = endDate
+			car.Bookings[i] = BookingPeriod{StartDate: startDate, EndDate: endDate}
+			return nil
+		}
+	}
+	return fmt.Errorf("original booking period not found")
+}
+
+func (crs *CarRentalSystem) cancelReservation(reservationId int) error {
+	reservation, exists := crs.reservations[reservationId]
+	if !exists {
+		return fmt.Errorf("reservation not found")
+	}
+
+	car, exists := crs.cars[reservation.CarId]
+	if !exists {
+		return fmt.Errorf("car not found")
+	}
+
+	for i, b := range car.Bookings {
+		if b.StartDate.Equal(reservation.StartDate) && b.EndDate.Equal(reservation.EndDate) {
 			car.Bookings = append(car.Bookings[:i], car.Bookings[i+1:]...)
 			break
 		}
 	}
 
 	delete(crs.reservations, reservationId)
-
-	fmt.Println("Reservation canceled successfully")
+	return nil
 }
 
-func (crs *CarRentalSystem) search(carType string, price float64, startDate, endDate time.Time) (searchResult []Car) {
+func (crs *CarRentalSystem) search(carType string, price float64, startDate, endDate time.Time) []Car {
+	var searchResult []Car
 	for _, car := range crs.cars {
 		if car.CarType == carType && car.PricePerDay <= price && car.isAvailable(startDate, endDate) {
 			searchResult = append(searchResult, *car)
@@ -179,11 +172,10 @@ func (crs *CarRentalSystem) search(carType string, price float64, startDate, end
 }
 
 func (c *Car) isAvailable(startDate, endDate time.Time) bool {
-	for _, b := range c.Bookings {    // b instead of booking since it's already evident
+	for _, b := range c.Bookings {
 		if startDate.Before(b.EndDate) && endDate.After(b.StartDate) {
 			return false
 		}
 	}
 	return true
 }
-
