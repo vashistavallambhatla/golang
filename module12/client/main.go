@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-    // Creating client connection with NewClient instead of Dial
     client, err := grpc.NewClient("localhost:50051", 
         grpc.WithTransportCredentials(insecure.NewCredentials()))
     if err != nil {
