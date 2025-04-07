@@ -13,28 +13,27 @@ func NewQueue[T any]() *Queue[T] {
 	return &Queue[T]{}
 }
 
+
 func (q *Queue[T]) Enqueue(ele T) {
 	q.elements = append(q.elements, ele)
 }
 
-func (q *Queue[T]) Dequeue() (T,error) {
+func (q *Queue[T]) Dequeue() (T, error) {
 	if len(q.elements) == 0 {
 		var zeroValue T
-		return zeroValue,errors.New("empty Queue")
+		return zeroValue, errors.New("empty queue")
 	}
-
 	res := q.elements[0]
 	q.elements = q.elements[1:]
-	return res,nil
+	return res, nil
 }
 
-func (q *Queue[T]) Peek() (T,error) {
+func (q *Queue[T]) Peek() (T, error) {
 	if len(q.elements) == 0 {
 		var zeroValue T
-		return zeroValue,errors.New("Empty Queue")
+		return zeroValue, errors.New("empty queue")
 	}
-
-	return q.elements[0],nil
+	return q.elements[0], nil
 }
 
 func main() {
@@ -42,12 +41,23 @@ func main() {
 
 	queue.Enqueue(1)
 	queue.Enqueue(2)
-	ele , _ := queue.Peek()
-	fmt.Printf("%d\n",ele)
-	queue.Dequeue()
-	ele2 , _ := queue.Peek()
-	fmt.Printf("%d\n",ele2)
+
+	ele, err := queue.Peek()
+	if err != nil {
+		fmt.Println("Error peeking:", err)
+	} else {
+		fmt.Printf("Front element: %d\n", ele)
+	}
+
+	_, err = queue.Dequeue()
+	if err != nil {
+		fmt.Println("Error dequeuing:", err)
+	}
+
+	ele2, err := queue.Peek()
+	if err != nil {
+		fmt.Println("Error peeking:", err)
+	} else {
+		fmt.Printf("Front element after dequeue: %d\n", ele2)
+	}
 }
-
-
-
