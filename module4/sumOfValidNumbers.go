@@ -8,42 +8,36 @@ import (
 	"strings"
 )
 
-func sumOfValidNumbers() (total int,err error) {
+func sumOfValidNumbers() (total int, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("recovered from panic: %v", r)
 		}
 	}()
 
-	numbersString := flag.String("Numbers","","a comma separated list of numbers")
-
+	numbersString := flag.String("Numbers", "", "a comma separated list of numbers")
 	flag.Parse()
 
 	if *numbersString == "" {
-		fmt.Println("No numbers provided")
-		return  0 , errors.New("no numbers are provided")
+		return 0, errors.New("no numbers provided")
 	}
 
-	numbers := strings.Split(*numbersString,",")
-	
-	var sum int
+	numbers := strings.Split(*numbersString, ",")
 
-	for _,numStr := range numbers {
-
+	for _, numStr := range numbers {
 		if strings.TrimSpace(numStr) == "" {
 			continue
 		}
 
-		num , err := strconv.Atoi(numStr)
-
-		if err!=nil {
-			return 0, fmt.Errorf("invalid number '%s', unable to convert to integer",numStr)
+		num, convErr := strconv.Atoi(numStr)
+		if convErr != nil {
+			return 0, fmt.Errorf("invalid number '%s', unable to convert to integer", numStr)
 		}
 
-		sum += num
+		total += num
 	}
 
-	return sum,nil
+	return total, nil
 }
 
 func main() {
