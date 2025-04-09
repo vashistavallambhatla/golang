@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-func sumOfValidNumbers() (int,error) {
+func sumOfValidNumbers() (total int,err error) {
 	defer func() {
-		if r := recover(); r!=nil {
-			fmt.Println("Recovered from a panic",r)
+		if r := recover(); r != nil {
+			err = fmt.Errorf("recovered from panic: %v", r)
 		}
 	}()
 
@@ -21,7 +21,7 @@ func sumOfValidNumbers() (int,error) {
 
 	if *numbersString == "" {
 		fmt.Println("No numbers provided")
-		return  0 , errors.New("No numbers are provided")
+		return  0 , errors.New("no numbers are provided")
 	}
 
 	numbers := strings.Split(*numbersString,",")
@@ -37,7 +37,7 @@ func sumOfValidNumbers() (int,error) {
 		num , err := strconv.Atoi(numStr)
 
 		if err!=nil {
-			return 0, fmt.Errorf("Invalid number '%s', unable to convert to integer",numStr)
+			return 0, fmt.Errorf("invalid number '%s', unable to convert to integer",numStr)
 		}
 
 		sum += num

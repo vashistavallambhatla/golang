@@ -76,7 +76,7 @@ func main() {
 	userCh := make(chan User)
 
 	var allUsers []User
-	go func() { // Fan-out, Fan-in approach? The go func() block runs in the background as a goroutine, and it waits for data to be sent through the userCh channel.
+	go func() { // Fan-out, Fan-in approach! The go func() block runs in the background as a goroutine, and it waits for data to be sent through the userCh channel.
 		for user := range userCh {
 			allUsers = append(allUsers, user)
 		}
