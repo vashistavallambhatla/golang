@@ -407,6 +407,10 @@ func main() {
 	fmt.Printf("\nExpected error with invalid dates: %v\n", err)
 
 
-	_, err = rentalSystem.findAvailableCarsByFilters("", 0, startDate, endDate)
-	fmt.Printf("Expected error with invalid search criteria: %v\n", err)
+	cars, err := rentalSystem.findAvailableCarsByFilters("", 0, startDate, endDate)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(cars)
+	}
 }
