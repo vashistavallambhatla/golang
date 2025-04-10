@@ -238,8 +238,12 @@ func (crs *CarRentalSystem) cancelReservation(reservationId int) (string, error)
 }
 
 func (crs *CarRentalSystem) findAvailableCarsByFilters(carType string, price float64, startDate, endDate time.Time) ([]Car, error) {
-	if carType == "" && price <= 0 {
-		return nil, fmt.Errorf("invalid search criteria: either car type or price must be specified")
+	if carType == "" && price <= 0  && startDate.IsZero() && endDate.IsZero(){ // if no filters are provided, return all cars
+		allCars := make([]Car, 0, len(crs.cars))
+		for _, car := range crs.cars {
+			allCars = append(allCars, *car)
+		}
+		return allCars, nil
 	}
 
 	var searchResult []Car
@@ -247,7 +251,7 @@ func (crs *CarRentalSystem) findAvailableCarsByFilters(carType string, price flo
 	for _, car := range crs.cars {
 		checkErr := car.isAvailable(startDate, endDate)
 		if checkErr != nil {
-			return nil, checkErr
+			continue
 		}
 
 		typeMatches := carType == "" || car.CarType == carType
