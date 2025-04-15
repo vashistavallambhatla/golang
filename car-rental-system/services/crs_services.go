@@ -33,7 +33,6 @@ func NewCarRentalSystem() *CarRentalSystem {
 	}
 }
 
-// EnrollCar adds a new car to the system
 func (crs *CarRentalSystem) EnrollCar(make, model string, year int, licensePlate string, pricePerDay float64, carType string) (models.Car, error) {
 	_, licensePlateExists := crs.licensePlates[licensePlate]
 	if licensePlateExists {
@@ -61,7 +60,6 @@ func (crs *CarRentalSystem) EnrollCar(make, model string, year int, licensePlate
 	return *crs.cars[id], nil
 }
 
-// RegisterCustomer registers a new customer in the system
 func (crs *CarRentalSystem) RegisterCustomer(name, contact, license string) (models.Customer, error) {
 	_, licenseExists := crs.customerLicense[license]
 	if licenseExists {
@@ -81,7 +79,6 @@ func (crs *CarRentalSystem) RegisterCustomer(name, contact, license string) (mod
 	return *crs.customers[id], nil
 }
 
-// MakeReservation creates a new reservation in the system
 func (crs *CarRentalSystem) MakeReservation(carId, customerId int, startDate, endDate time.Time) (models.Reservation, error) {
 	car, carExists := crs.cars[carId]
 	if !carExists {
@@ -125,7 +122,6 @@ func (crs *CarRentalSystem) MakeReservation(carId, customerId int, startDate, en
 	return *reservation, nil
 }
 
-// ModifyReservation modifies an existing reservation
 func (crs *CarRentalSystem) ModifyReservation(reservationId int, startDate, endDate time.Time) (models.Reservation, error) {
 	reservation, exists := crs.reservations[reservationId]
 	if !exists {
@@ -161,7 +157,7 @@ func (crs *CarRentalSystem) ModifyReservation(reservationId int, startDate, endD
 	return models.Reservation{}, fmt.Errorf("original booking period not found")
 }
 
-// CancelReservation cancels an existing reservation
+
 func (crs *CarRentalSystem) CancelReservation(reservationId int) (string, error) {
 	reservation, exists := crs.reservations[reservationId]
 	if !exists {
@@ -190,7 +186,6 @@ func (crs *CarRentalSystem) CancelReservation(reservationId int) (string, error)
 	return "Reservation cancelled successfully and initiated refund", nil
 }
 
-// FindAvailableCarsByFilters finds available cars based on filters
 func (crs *CarRentalSystem) FindAvailableCarsByFilters(carType string, price float64, startDate, endDate time.Time) ([]models.Car, error) {
 	if carType == "" && price <= 0 && startDate.IsZero() && endDate.IsZero() {
 		allCars := make([]models.Car, 0, len(crs.cars))
@@ -223,7 +218,6 @@ func (crs *CarRentalSystem) FindAvailableCarsByFilters(carType string, price flo
 	return searchResult, nil
 }
 
-// processPayment processes a payment for a reservation
 func (crs *CarRentalSystem) processPayment(reservationID int, amount float64) (*models.Payment, error) {
 	id := crs.nextPaymentId
 	crs.nextPaymentId++
@@ -249,7 +243,7 @@ func (crs *CarRentalSystem) processPayment(reservationID int, amount float64) (*
 	return payment, nil
 }
 
-// initiateRefund initiates a refund for a payment
+
 func (crs *CarRentalSystem) initiateRefund(paymentId int) error {
 	payment, exists := crs.payments[paymentId]
 	if !exists {
@@ -259,7 +253,6 @@ func (crs *CarRentalSystem) initiateRefund(paymentId int) error {
 	return nil
 }
 
-// callMockGateway simulates calling a payment gateway
 func callMockGateway(payment *models.Payment) (models.PaymentStage, error) {
 	if rand.Intn(100) < 90 {
 		return models.Completed, nil
