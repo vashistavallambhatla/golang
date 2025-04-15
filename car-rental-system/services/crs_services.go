@@ -21,7 +21,6 @@ type CarRentalSystem struct {
 	nextPaymentId     int
 }
 
-// NewCarRentalSystem creates a new instance of the car rental system
 func NewCarRentalSystem() *CarRentalSystem {
 	return &CarRentalSystem{
 		cars:            make(map[int]*models.Car),
