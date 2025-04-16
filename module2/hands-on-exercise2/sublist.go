@@ -2,11 +2,22 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 )
 
+func CustomDeepEqual(a []int,b []int) bool { // Wrote a custom DeepEqual that basically checks if the arrays are identical
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		if a[i]!=b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func findRelation(a []int,b []int) string {
-	if reflect.DeepEqual(a,b) {
+	if CustomDeepEqual(a,b) {
 		return "equal"
 	} else if len(a) > len(b) {
 		if(isSubList(a,b)){
@@ -26,7 +37,7 @@ func isSubList(big,small []int) bool {
 		return true
 	}
 	for i := 0 ; i <= len(big)-small_len ; i++ {
-		if reflect.DeepEqual(big[i:i+small_len],small){
+		if CustomDeepEqual(big[i:i+small_len],small){
 			return true
 		}
 	}

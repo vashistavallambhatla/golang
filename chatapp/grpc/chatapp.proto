@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "example/hello/chatapp/grpc";
+
+service Chat {
+  rpc RoomChat(stream ChatRoomMessage) returns (stream ChatRoomMessage);
+  rpc SendPrivateMessage(PrivateMessage) returns (MessageResponse);
+  rpc LeaveRoom(LeaveRequest) returns (MessageResponse); 
+}
+
+message ChatRoomMessage {
+  string sender = 1;
+  string content = 2;
+  string room = 3;
+  bool isJoin = 4;
+}
+
+message PrivateMessage {
+  string sender = 1;
+  string recipient = 2;
+  string content = 3;
+}
+
+message MessageResponse {
+  string status = 1;
+}
+
+message LeaveRequest {
+  string sender = 1;
+  string room = 2;
+}
