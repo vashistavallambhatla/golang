@@ -50,10 +50,6 @@ func main() {
 		fmt.Println("Successfully connected to the database")
 	}
 
-	if err := db.AutoMigrate(&Blog{}); err != nil {
-		log.Fatal("Failed to auto-migrate: ", err)
-	}
-
 	r := mux.NewRouter()
 	r.HandleFunc("/blog", CreateBlog(db)).Methods("POST")
 	r.HandleFunc("/blogs", GetAllBlogs(db)).Methods("GET")
