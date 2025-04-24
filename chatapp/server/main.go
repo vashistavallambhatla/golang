@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"sync"
-	"errors"
 
 	pb "example/hello/chatapp/grpc"
 
@@ -15,132 +15,279 @@ import (
 )
 
 type chatServer struct {
-    pb.UnimplementedChatServer
-    clients     map[string][]chan *pb.ChatRoomMessage // map for rooms and their clients' channels
-    activeUsers map[string]chan *pb.PrivateMessage    // map for active user private message channels
-    mu          sync.Mutex
+	pb.UnimplementedChatServer
+	clients     map[string]map[string]chan *pb.ChatRoomMessage
+	activeUsers map[string]chan *pb.PrivateMessage
+	mu          sync.Mutex
+	updates     map[string]map[string]chan *pb.Update
 }
 
 func NewChatServer() *chatServer {
-    return &chatServer{
-        clients:    make(map[string][]chan *pb.ChatRoomMessage),
-        activeUsers : make(map[string]chan *pb.PrivateMessage),
-    }
+	return &chatServer{
+		clients:     make(map[string]map[string]chan *pb.ChatRoomMessage),
+		activeUsers: make(map[string]chan *pb.PrivateMessage),
+		updates:     make(map[string]map[string]chan *pb.Update),
+	}
+}
+
+func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb.MessageResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	room := joinReq.Room
+	sender := joinReq.Sender
+
+	fmt.Println(sender)
+	fmt.Println(s.clients)
+
+	if s.clients[room] == nil {
+		s.clients[room] = make(map[string]chan *pb.ChatRoomMessage)
+	}
+
+	if _, exists := s.clients[room][sender]; exists {
+		return &pb.MessageResponse{
+			Status: "Failed",
+		}, errors.New("username already taken in this room")
+	}
+
+	s.clients[room][sender] = make(chan *pb.ChatRoomMessage, 10)
+	s.activeUsers[sender] = make(chan *pb.PrivateMessage, 10)
+
+	if s.updates[room] == nil {
+		s.updates[room] = make(map[string]chan *pb.Update)
+	}
+	s.updates[room][sender] = make(chan *pb.Update, 10)
+
+	s.notifyRoomUpdate(room, sender, "joined")
+
+	return &pb.MessageResponse{
+		Status: "Success",
+	}, nil
+}
+
+func (s *chatServer) notifyRoomUpdate(room, user, action string) {
+	update := &pb.Update{
+		Sender: user,
+		Room:   room,
+		Update: user + " has " + action + " the room",
+		Type:   action,
+	}
+
+	if roomUsers, ok := s.updates[room]; ok {
+		for _, updateChan := range roomUsers {
+			select {
+			case updateChan <- update:
+			default:
+				log.Printf("Failed to send update to a user: buffer full")
+			}
+		}
+	}
+}
+
+func (s *chatServer) BroadcastRoomUpdate(req *pb.JoinRequest, stream pb.Chat_BroadcastRoomUpdateServer) error {
+	room := req.Room
+	sender := req.Sender
+
+	s.mu.Lock()
+	userChan, ok := s.updates[room][sender]
+	s.mu.Unlock()
+
+	if !ok {
+		return errors.New("user not registered for updates")
+	}
+
+	for update := range userChan {
+		if update.Type != "sigexit" {
+			if err := stream.Send(update); err != nil {
+				log.Printf("error sending update to %s: %v", sender, err)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *chatServer) LeaveChatRoom(ctx context.Context, leaveReq *pb.LeaveRequest) (*pb.MessageResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	room := leaveReq.Room
+	sender := leaveReq.Sender
+	leaveType := leaveReq.Type
+
+	if _, exists := s.clients[room]; !exists {
+		return &pb.MessageResponse{Status: "Failed"}, errors.New("room does not exist")
+	}
+
+	if _, exists := s.clients[room][sender]; !exists {
+		return &pb.MessageResponse{Status: "Failed"}, errors.New("user not in the room")
+	}
+
+	s.notifyRoomUpdate(room, sender, leaveType)
+
+	if ch := s.clients[room][sender]; ch != nil {
+		close(ch)
+	}
+
+	delete(s.clients[room], sender)
+
+	userInOtherRooms := false
+	for r, users := range s.clients {
+		if r != room && users[sender] != nil {
+			userInOtherRooms = true
+			break
+		}
+	}
+
+	if !userInOtherRooms {
+		if pmChan, exists := s.activeUsers[sender]; exists {
+			close(pmChan)
+			delete(s.activeUsers, sender)
+		}
+	}
+
+	if s.updates[room] != nil {
+		if updateChan := s.updates[room][sender]; updateChan != nil {
+			close(updateChan)
+		}
+		delete(s.updates[room], sender)
+	}
+
+	return &pb.MessageResponse{
+		Status: "User left the room successfully",
+	}, nil
 }
 
 func (s *chatServer) SendPrivateMessage(ctx context.Context, msg *pb.PrivateMessage) (*pb.MessageResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for activeUser, activeUserChan := range s.activeUsers {
-		if activeUser == msg.Recipient {
-			activeUserChan <- msg
-
-			return &pb.MessageResponse{
-				Status: "Message sent",
-			}, nil
-		}
+	recipientChan, exists := s.activeUsers[msg.Recipient]
+	if !exists {
+		return &pb.MessageResponse{
+			Status: "Operation failed -- No user found",
+		}, errors.New("couldn't send the message -- User not present or might've disconnected")
 	}
 
-	return &pb.MessageResponse{
-		Status: "Operation failed -- No user found",
-	}, errors.New("couldn't send the message -- User not present or might've disconnected")
+	select {
+	case recipientChan <- msg:
+		return &pb.MessageResponse{
+			Status: "Message sent",
+		}, nil
+	default:
+		return &pb.MessageResponse{
+			Status: "Operation failed -- Message buffer full",
+		}, errors.New("couldn't send the message -- Recipient message buffer is full")
+	}
 }
 
 func (s *chatServer) RoomChat(stream pb.Chat_RoomChatServer) error {
-	clientChan := make(chan *pb.ChatRoomMessage, 10)
-	privateMessageChan := make(chan *pb.PrivateMessage,10)
-	var room string
+	var sender, room string
+	clientChan := make(chan *pb.ChatRoomMessage, 10) // So when a user calls RoomChat() from their end, the stream instance is unique to them and the associated chan is also unique?
+	privateMessageChan := make(chan *pb.PrivateMessage, 10)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
 
 	go func() {
-		for msg := range clientChan {
-			stream.Send(msg)
-		}
-	}()
+		defer wg.Done()
+		for {
+			msg, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Println("recv error", err)
+				break
+			}
 
-	for {
-		msg, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Println("recv error", err)
-			break
-		}
+			if room == "" {
+				room = msg.Room
+				sender = msg.Sender
 
-		if room == "" {
-			room = msg.Room
+				s.mu.Lock()
+				if s.clients[room] == nil {
+					s.clients[room] = make(map[string]chan *pb.ChatRoomMessage)
+				}
+				s.clients[room][sender] = clientChan
+				s.activeUsers[sender] = privateMessageChan
+				s.mu.Unlock()
+
+				continue
+			}
+
 			s.mu.Lock()
-			s.clients[room] = append(s.clients[room], clientChan)
-			s.activeUsers[msg.Sender] = privateMessageChan
-			s.broadcastRoomUpdate(fmt.Sprintf("%s has joined the room", msg.Sender), room, true)
+			for user, ch := range s.clients[room] {
+				if user != msg.Sender && ch != nil {
+
+					select {
+					case ch <- msg:
+					default:
+						log.Printf("Failed to send message to %s: buffer full", user)
+					}
+				}
+			}
 			s.mu.Unlock()
 		}
 
 		s.mu.Lock()
-		for _, ch := range s.clients[room] {
-			if ch != clientChan {
-				ch <- msg
+		if s.clients[room] != nil {
+			delete(s.clients[room], sender)
+			if len(s.clients[room]) == 0 {
+				delete(s.clients, room)
 			}
 		}
+		s.notifyRoomUpdate(room, sender, "left")
 		s.mu.Unlock()
-	}
+	}()
 
-	
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	go func() {
+		defer wg.Done()
 
-	
-	for i, ch := range s.clients[room] {
-		if ch == clientChan {
-			s.clients[room] = append(s.clients[room][:i], s.clients[room][i+1:]...)
-			s.broadcastRoomUpdate(fmt.Sprintf("%s has left the room", room), room, false)
-			break
+		for {
+			select {
+			case roomMsg, ok := <-clientChan:
+				if !ok {
+					return
+				}
+				if err := stream.Send(roomMsg); err != nil {
+					log.Printf("Error sending room message: %v", err)
+					return
+				}
+			case privateMsg, ok := <-privateMessageChan:
+				if !ok {
+					return
+				}
+
+				roomMsg := &pb.ChatRoomMessage{
+					Sender:  privateMsg.Sender,
+					Room:    "private",
+					Content: 
+					privateMsg.Content,
+				}
+				if err := stream.Send(roomMsg); err != nil {
+					log.Printf("Error sending private message: %v", err)
+					return
+				}
+			}
 		}
+	}()
+
+	wg.Wait()
+
+	s.mu.Lock()
+	delete(s.activeUsers, sender)
+	if s.updates[room] != nil {
+		if updateCh := s.updates[room][sender]; updateCh != nil {
+			close(updateCh)
+		}
+		delete(s.updates[room], sender)
 	}
+	s.mu.Unlock()
 
-	s.activeUsers = nil
-
-	close(clientChan)
-	close(privateMessageChan)
 	return nil
 }
-
-
-func (s *chatServer) broadcastRoomUpdate(content, room string, isJoin bool) {
-    update := &pb.ChatRoomMessage{
-        Content: content,
-        Room:    room,
-        IsJoin:  isJoin,
-    }
-
-    s.mu.Lock()
-    defer s.mu.Unlock()
-
-    for _, ch := range s.clients[room] {
-        ch <- update
-    }
-}
-
-func (s *chatServer) LeaveRoom(ctx context.Context, req *pb.LeaveRequest) (*pb.MessageResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	clientChans := s.clients[req.Room]
-	for _, ch := range clientChans {
-		// no direct way to identify the sender's channel, so you'd need a better mapping or metadata
-		// this part depends on how you associate senders to channels in a real app
-		_ = ch // placeholder
-	}
-
-	// Just remove sender from activeUsers map
-	delete(s.activeUsers, req.Sender)
-
-	s.broadcastRoomUpdate(fmt.Sprintf("%s has left the room", req.Sender), req.Room, false)
-
-	return &pb.MessageResponse{Status: "Left the room"}, nil
-}
-
 
 func main() {
 	lis, err := net.Listen("tcp", ":50051")

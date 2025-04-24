@@ -7,7 +7,14 @@ option go_package = "example/hello/chatapp/grpc";
 service Chat {
   rpc RoomChat(stream ChatRoomMessage) returns (stream ChatRoomMessage);
   rpc SendPrivateMessage(PrivateMessage) returns (MessageResponse);
-  rpc LeaveRoom(LeaveRequest) returns (MessageResponse); 
+  rpc LeaveChatRoom(LeaveRequest) returns (MessageResponse); 
+  rpc JoinRoom(JoinRequest) returns (MessageResponse);
+  rpc BroadcastRoomUpdate(JoinRequest) returns (stream Update);
+}
+
+message JoinRequest {
+    string sender = 1;
+    string room = 2;
 }
 
 message ChatRoomMessage {
@@ -30,4 +37,12 @@ message MessageResponse {
 message LeaveRequest {
   string sender = 1;
   string room = 2;
+  string type = 3;
+}
+
+message Update {
+    string update = 1;
+    string sender = 2;
+    string room = 3;
+    string type = 4;
 }

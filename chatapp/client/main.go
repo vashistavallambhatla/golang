@@ -1,109 +1,156 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	"time"
 
 	pb "example/hello/chatapp/grpc"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
-	// Set up a connection to the server
-	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("Failed to connect: %v", err)
 	}
 	defer conn.Close()
 
-	// Create a new chat client
 	client := pb.NewChatClient(conn)
 
-	// Get username and room from the user
-	fmt.Println("Enter your username:")
-	var username string
-	fmt.Scanln(&username)
+	reader := bufio.NewReader(os.Stdin)
+	signalChan := make(chan os.Signal,1)
+	signal.Notify(signalChan,os.Interrupt,syscall.SIGTERM)
 
-	fmt.Println("Enter the room you want to join:")
-	var room string
-	fmt.Scanln(&room)
+	log.Print("Enter your username: ")
+	sender, _ := reader.ReadString('\n')
+	sender = strings.TrimSpace(sender)
 
-	// Start a new chat stream
+	log.Print("Enter room name to join: ")
+	room, _ := reader.ReadString('\n')
+	room = strings.TrimSpace(room)
+
+
+	_, err = client.JoinRoom(context.Background(), &pb.JoinRequest{Sender: sender, Room: room})
+	if err != nil {
+		log.Fatalf("Failed to join room: %v", err)
+	}
+	log.Printf("You joined room: %s", room)
+
+	go func() {
+		<-signalChan
+		fmt.Println()
+		_, err := client.LeaveChatRoom(context.Background(), &pb.LeaveRequest{
+			Sender: sender,
+			Room:   room,
+			Type: "sigexit",
+		})
+		if err != nil {
+			log.Printf("Error leaving chat on Ctrl+C: %v", err)
+		}
+		os.Exit(0)
+	}()
+
+	
+	go func() {
+		joinReq := &pb.JoinRequest{
+			Sender: sender,
+			Room: room,
+		}
+		stream, err := client.BroadcastRoomUpdate(context.Background(), joinReq)
+		if err != nil {
+			log.Printf("Error joining update stream: %v", err)
+			return
+		}
+		for {
+			update, err := stream.Recv()
+			if err != nil {
+				log.Printf("Update stream ended: %v", err)
+				return
+			}
+			log.Printf("[UPDATE]: %s", update.Update)
+			if update.Type == "joined" && update.Sender == sender{
+				fmt.Print("press ENTER to start chatting")
+			}
+		}
+	}()
+
 	stream, err := client.RoomChat(context.Background())
 	if err != nil {
-		log.Fatalf("could not create stream: %v", err)
+		log.Fatalf("Failed to start room chat stream: %v", err)
 	}
 
-	// Send join message to the room
-	joinMessage := &pb.ChatRoomMessage{
-		Sender: username,
-		Room:   room,
-		Content: fmt.Sprintf("%s has joined the room", username),
-		IsJoin: true,
-	}
-	err = stream.Send(joinMessage)
-	if err != nil {
-		log.Fatalf("failed to send join message: %v", err)
-	}
-	fmt.Println("Joined the room:", room)
-
-	// Run a goroutine to receive messages from the server
-	go receiveMessages(stream)
-
-	// Send and receive messages interactively
-	for {
-		fmt.Println("Enter message to send (or type 'exit' to leave):")
-		var message string
-		fmt.Scanln(&message)
-
-		if message == "exit" {
-			// Send leave message to the room
-			leaveMessage := &pb.ChatRoomMessage{
-				Sender: username,
-				Room:   room,
-				Content: fmt.Sprintf("%s has left the room", username),
-				IsJoin: false,
-			}
-			err = stream.Send(leaveMessage)
+	go func() {
+		for {
+			msg, err := stream.Recv()
 			if err != nil {
-				log.Fatalf("failed to send leave message: %v", err)
+				log.Printf("Error receiving message: %v", err)
+				return
 			}
+			format := "[%s]: %s"
+			if msg.Room == "private" {
+				format = "Private message from [%s]: %s"
+			}
+			log.Printf(format,msg.Sender,msg.Content)
+		}
+	}()
 
-			// Send leave room request to the server
-			_, err := client.LeaveRoom(context.Background(), &pb.LeaveRoomRequest{
-				Username: username,
-				Room:     room,
+	
+	for {
+		text, _ := reader.ReadString('\n')
+		text = strings.TrimSpace(text)
+
+		if strings.HasPrefix(text, "/pm") {
+			parts := strings.SplitN(text, " ", 3)
+			if len(parts) != 3 {
+				log.Println("Use: /pm <recipient> <message> to send a private message")
+				continue
+			}
+			recipient := parts[1]
+			message := parts[2]
+
+			_, err := client.SendPrivateMessage(context.Background(), &pb.PrivateMessage{
+				Sender:    sender,
+				Recipient: recipient,
+				Content:   message,
 			})
 			if err != nil {
-				log.Fatalf("could not leave room: %v", err)
+				log.Printf("Failed to send private message: %v", err)
 			}
-			fmt.Println("You have left the room.")
+			continue
+		}
+
+
+		if text == "/exit" {
+			_, err := client.LeaveChatRoom(context.Background(), &pb.LeaveRequest{
+				Sender: sender,
+				Room:   room,
+			})
+			if err != nil {
+				log.Printf("Leave error: %v", err)
+			}
+			log.Println("You left the room.")
 			break
 		}
 
-		// Send the message to the room
-		err = stream.Send(&pb.ChatRoomMessage{
-			Sender:  username,
+		err := stream.Send(&pb.ChatRoomMessage{
+			Sender:  sender,
 			Room:    room,
-			Content: message,
-			IsJoin:  false,
+			Content: text,
 		})
 		if err != nil {
-			log.Fatalf("failed to send message: %v", err)
+			log.Printf("Failed to send message: %v", err)
+			break
 		}
 	}
-}
 
-// Function to receive and display incoming messages from the server
-func receiveMessages(stream pb.Chat_RoomChatClient) {
-	for {
-		msg, err := stream.Recv()
-		if err != nil {
-			log.Fatalf("Error receiving message: %v", err)
-		}
-		fmt.Printf("\n[%s] %s: %s\n", msg.Room, msg.Sender, msg.Content)
-	}
+	time.Sleep(time.Second)
+	stream.CloseSend()
 }

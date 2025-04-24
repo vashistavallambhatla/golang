@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package filetransfer;
+
+option go_package = "example/hello/filetransfer/grpc";
+
+service FileTransferService {
+    rpc UploadFile(stream FileChunk) returns (UploadStatus);
+    rpc DownloadFile(FileRequest) returns (stream FileChunk);
+}
+
+message FileRequest {
+    string file_name = 1;
+    int32 chunk_size = 2;
+}
+
+message FileChunk {
+    bytes chunk_data = 1;
+    int32 chunk_index = 2;
+    bool is_last_chunk = 3;
+    string file_name = 4;
+}
+
+message UploadStatus {
+    bool success = 1;
+    string message = 2;
+}
+
+

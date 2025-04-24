@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Chat_RoomChat_FullMethodName           = "/chat.Chat/RoomChat"
-	Chat_SendPrivateMessage_FullMethodName = "/chat.Chat/SendPrivateMessage"
-	Chat_LeaveRoom_FullMethodName          = "/chat.Chat/LeaveRoom"
+	Chat_RoomChat_FullMethodName            = "/chat.Chat/RoomChat"
+	Chat_SendPrivateMessage_FullMethodName  = "/chat.Chat/SendPrivateMessage"
+	Chat_LeaveChatRoom_FullMethodName       = "/chat.Chat/LeaveChatRoom"
+	Chat_JoinRoom_FullMethodName            = "/chat.Chat/JoinRoom"
+	Chat_BroadcastRoomUpdate_FullMethodName = "/chat.Chat/BroadcastRoomUpdate"
 )
 
 // ChatClient is the client API for Chat service.
@@ -30,7 +32,9 @@ const (
 type ChatClient interface {
 	RoomChat(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ChatRoomMessage, ChatRoomMessage], error)
 	SendPrivateMessage(ctx context.Context, in *PrivateMessage, opts ...grpc.CallOption) (*MessageResponse, error)
-	LeaveRoom(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	LeaveChatRoom(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	BroadcastRoomUpdate(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Update], error)
 }
 
 type chatClient struct {
@@ -64,15 +68,44 @@ func (c *chatClient) SendPrivateMessage(ctx context.Context, in *PrivateMessage,
 	return out, nil
 }
 
-func (c *chatClient) LeaveRoom(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+func (c *chatClient) LeaveChatRoom(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MessageResponse)
-	err := c.cc.Invoke(ctx, Chat_LeaveRoom_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Chat_LeaveChatRoom_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
+
+func (c *chatClient) JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MessageResponse)
+	err := c.cc.Invoke(ctx, Chat_JoinRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatClient) BroadcastRoomUpdate(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Update], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Chat_ServiceDesc.Streams[1], Chat_BroadcastRoomUpdate_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[JoinRequest, Update]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Chat_BroadcastRoomUpdateClient = grpc.ServerStreamingClient[Update]
 
 // ChatServer is the server API for Chat service.
 // All implementations must embed UnimplementedChatServer
@@ -80,7 +113,9 @@ func (c *chatClient) LeaveRoom(ctx context.Context, in *LeaveRequest, opts ...gr
 type ChatServer interface {
 	RoomChat(grpc.BidiStreamingServer[ChatRoomMessage, ChatRoomMessage]) error
 	SendPrivateMessage(context.Context, *PrivateMessage) (*MessageResponse, error)
-	LeaveRoom(context.Context, *LeaveRequest) (*MessageResponse, error)
+	LeaveChatRoom(context.Context, *LeaveRequest) (*MessageResponse, error)
+	JoinRoom(context.Context, *JoinRequest) (*MessageResponse, error)
+	BroadcastRoomUpdate(*JoinRequest, grpc.ServerStreamingServer[Update]) error
 	mustEmbedUnimplementedChatServer()
 }
 
@@ -97,8 +132,14 @@ func (UnimplementedChatServer) RoomChat(grpc.BidiStreamingServer[ChatRoomMessage
 func (UnimplementedChatServer) SendPrivateMessage(context.Context, *PrivateMessage) (*MessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendPrivateMessage not implemented")
 }
-func (UnimplementedChatServer) LeaveRoom(context.Context, *LeaveRequest) (*MessageResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LeaveRoom not implemented")
+func (UnimplementedChatServer) LeaveChatRoom(context.Context, *LeaveRequest) (*MessageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LeaveChatRoom not implemented")
+}
+func (UnimplementedChatServer) JoinRoom(context.Context, *JoinRequest) (*MessageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinRoom not implemented")
+}
+func (UnimplementedChatServer) BroadcastRoomUpdate(*JoinRequest, grpc.ServerStreamingServer[Update]) error {
+	return status.Errorf(codes.Unimplemented, "method BroadcastRoomUpdate not implemented")
 }
 func (UnimplementedChatServer) mustEmbedUnimplementedChatServer() {}
 func (UnimplementedChatServer) testEmbeddedByValue()              {}
@@ -146,23 +187,52 @@ func _Chat_SendPrivateMessage_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Chat_LeaveRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Chat_LeaveChatRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LeaveRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatServer).LeaveRoom(ctx, in)
+		return srv.(ChatServer).LeaveChatRoom(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Chat_LeaveRoom_FullMethodName,
+		FullMethod: Chat_LeaveChatRoom_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServer).LeaveRoom(ctx, req.(*LeaveRequest))
+		return srv.(ChatServer).LeaveChatRoom(ctx, req.(*LeaveRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _Chat_JoinRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServer).JoinRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Chat_JoinRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServer).JoinRoom(ctx, req.(*JoinRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Chat_BroadcastRoomUpdate_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(JoinRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ChatServer).BroadcastRoomUpdate(m, &grpc.GenericServerStream[JoinRequest, Update]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Chat_BroadcastRoomUpdateServer = grpc.ServerStreamingServer[Update]
 
 // Chat_ServiceDesc is the grpc.ServiceDesc for Chat service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -176,8 +246,12 @@ var Chat_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Chat_SendPrivateMessage_Handler,
 		},
 		{
-			MethodName: "LeaveRoom",
-			Handler:    _Chat_LeaveRoom_Handler,
+			MethodName: "LeaveChatRoom",
+			Handler:    _Chat_LeaveChatRoom_Handler,
+		},
+		{
+			MethodName: "JoinRoom",
+			Handler:    _Chat_JoinRoom_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -186,6 +260,11 @@ var Chat_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _Chat_RoomChat_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "BroadcastRoomUpdate",
+			Handler:       _Chat_BroadcastRoomUpdate_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "grpc/chatapp.proto",

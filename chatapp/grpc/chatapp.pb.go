@@ -21,6 +21,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type JoinRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sender        string                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	Room          string                 `protobuf:"bytes,2,opt,name=room,proto3" json:"room,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinRequest) Reset() {
+	*x = JoinRequest{}
+	mi := &file_grpc_chatapp_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinRequest) ProtoMessage() {}
+
+func (x *JoinRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_chatapp_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinRequest.ProtoReflect.Descriptor instead.
+func (*JoinRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_chatapp_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *JoinRequest) GetSender() string {
+	if x != nil {
+		return x.Sender
+	}
+	return ""
+}
+
+func (x *JoinRequest) GetRoom() string {
+	if x != nil {
+		return x.Room
+	}
+	return ""
+}
+
 type ChatRoomMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Sender        string                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
@@ -33,7 +85,7 @@ type ChatRoomMessage struct {
 
 func (x *ChatRoomMessage) Reset() {
 	*x = ChatRoomMessage{}
-	mi := &file_grpc_chatapp_proto_msgTypes[0]
+	mi := &file_grpc_chatapp_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +97,7 @@ func (x *ChatRoomMessage) String() string {
 func (*ChatRoomMessage) ProtoMessage() {}
 
 func (x *ChatRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_chatapp_proto_msgTypes[0]
+	mi := &file_grpc_chatapp_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,7 +110,7 @@ func (x *ChatRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatRoomMessage.ProtoReflect.Descriptor instead.
 func (*ChatRoomMessage) Descriptor() ([]byte, []int) {
-	return file_grpc_chatapp_proto_rawDescGZIP(), []int{0}
+	return file_grpc_chatapp_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ChatRoomMessage) GetSender() string {
@@ -100,7 +152,7 @@ type PrivateMessage struct {
 
 func (x *PrivateMessage) Reset() {
 	*x = PrivateMessage{}
-	mi := &file_grpc_chatapp_proto_msgTypes[1]
+	mi := &file_grpc_chatapp_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -112,7 +164,7 @@ func (x *PrivateMessage) String() string {
 func (*PrivateMessage) ProtoMessage() {}
 
 func (x *PrivateMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_chatapp_proto_msgTypes[1]
+	mi := &file_grpc_chatapp_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -125,7 +177,7 @@ func (x *PrivateMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrivateMessage.ProtoReflect.Descriptor instead.
 func (*PrivateMessage) Descriptor() ([]byte, []int) {
-	return file_grpc_chatapp_proto_rawDescGZIP(), []int{1}
+	return file_grpc_chatapp_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PrivateMessage) GetSender() string {
@@ -158,7 +210,7 @@ type MessageResponse struct {
 
 func (x *MessageResponse) Reset() {
 	*x = MessageResponse{}
-	mi := &file_grpc_chatapp_proto_msgTypes[2]
+	mi := &file_grpc_chatapp_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -170,7 +222,7 @@ func (x *MessageResponse) String() string {
 func (*MessageResponse) ProtoMessage() {}
 
 func (x *MessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_chatapp_proto_msgTypes[2]
+	mi := &file_grpc_chatapp_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -183,7 +235,7 @@ func (x *MessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessageResponse.ProtoReflect.Descriptor instead.
 func (*MessageResponse) Descriptor() ([]byte, []int) {
-	return file_grpc_chatapp_proto_rawDescGZIP(), []int{2}
+	return file_grpc_chatapp_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *MessageResponse) GetStatus() string {
@@ -197,13 +249,14 @@ type LeaveRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Sender        string                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	Room          string                 `protobuf:"bytes,2,opt,name=room,proto3" json:"room,omitempty"`
+	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LeaveRequest) Reset() {
 	*x = LeaveRequest{}
-	mi := &file_grpc_chatapp_proto_msgTypes[3]
+	mi := &file_grpc_chatapp_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -215,7 +268,7 @@ func (x *LeaveRequest) String() string {
 func (*LeaveRequest) ProtoMessage() {}
 
 func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_chatapp_proto_msgTypes[3]
+	mi := &file_grpc_chatapp_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -228,7 +281,7 @@ func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRequest.ProtoReflect.Descriptor instead.
 func (*LeaveRequest) Descriptor() ([]byte, []int) {
-	return file_grpc_chatapp_proto_rawDescGZIP(), []int{3}
+	return file_grpc_chatapp_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *LeaveRequest) GetSender() string {
@@ -245,11 +298,89 @@ func (x *LeaveRequest) GetRoom() string {
 	return ""
 }
 
+func (x *LeaveRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+type Update struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Update        string                 `protobuf:"bytes,1,opt,name=update,proto3" json:"update,omitempty"`
+	Sender        string                 `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
+	Room          string                 `protobuf:"bytes,3,opt,name=room,proto3" json:"room,omitempty"`
+	Type          string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Update) Reset() {
+	*x = Update{}
+	mi := &file_grpc_chatapp_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Update) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Update) ProtoMessage() {}
+
+func (x *Update) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_chatapp_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Update.ProtoReflect.Descriptor instead.
+func (*Update) Descriptor() ([]byte, []int) {
+	return file_grpc_chatapp_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Update) GetUpdate() string {
+	if x != nil {
+		return x.Update
+	}
+	return ""
+}
+
+func (x *Update) GetSender() string {
+	if x != nil {
+		return x.Sender
+	}
+	return ""
+}
+
+func (x *Update) GetRoom() string {
+	if x != nil {
+		return x.Room
+	}
+	return ""
+}
+
+func (x *Update) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
 var File_grpc_chatapp_proto protoreflect.FileDescriptor
 
 const file_grpc_chatapp_proto_rawDesc = "" +
 	"\n" +
-	"\x12grpc/chatapp.proto\x12\x04chat\"o\n" +
+	"\x12grpc/chatapp.proto\x12\x04chat\"9\n" +
+	"\vJoinRequest\x12\x16\n" +
+	"\x06sender\x18\x01 \x01(\tR\x06sender\x12\x12\n" +
+	"\x04room\x18\x02 \x01(\tR\x04room\"o\n" +
 	"\x0fChatRoomMessage\x12\x16\n" +
 	"\x06sender\x18\x01 \x01(\tR\x06sender\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\x12\x12\n" +
@@ -260,14 +391,22 @@ const file_grpc_chatapp_proto_rawDesc = "" +
 	"\trecipient\x18\x02 \x01(\tR\trecipient\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\")\n" +
 	"\x0fMessageResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\":\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\"N\n" +
 	"\fLeaveRequest\x12\x16\n" +
 	"\x06sender\x18\x01 \x01(\tR\x06sender\x12\x12\n" +
-	"\x04room\x18\x02 \x01(\tR\x04room2\xbf\x01\n" +
+	"\x04room\x18\x02 \x01(\tR\x04room\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\"`\n" +
+	"\x06Update\x12\x16\n" +
+	"\x06update\x18\x01 \x01(\tR\x06update\x12\x16\n" +
+	"\x06sender\x18\x02 \x01(\tR\x06sender\x12\x12\n" +
+	"\x04room\x18\x03 \x01(\tR\x04room\x12\x12\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type2\xb3\x02\n" +
 	"\x04Chat\x12<\n" +
 	"\bRoomChat\x12\x15.chat.ChatRoomMessage\x1a\x15.chat.ChatRoomMessage(\x010\x01\x12A\n" +
-	"\x12SendPrivateMessage\x12\x14.chat.PrivateMessage\x1a\x15.chat.MessageResponse\x126\n" +
-	"\tLeaveRoom\x12\x12.chat.LeaveRequest\x1a\x15.chat.MessageResponseB\x1cZ\x1aexample/hello/chatapp/grpcb\x06proto3"
+	"\x12SendPrivateMessage\x12\x14.chat.PrivateMessage\x1a\x15.chat.MessageResponse\x12:\n" +
+	"\rLeaveChatRoom\x12\x12.chat.LeaveRequest\x1a\x15.chat.MessageResponse\x124\n" +
+	"\bJoinRoom\x12\x11.chat.JoinRequest\x1a\x15.chat.MessageResponse\x128\n" +
+	"\x13BroadcastRoomUpdate\x12\x11.chat.JoinRequest\x1a\f.chat.Update0\x01B\x1cZ\x1aexample/hello/chatapp/grpcb\x06proto3"
 
 var (
 	file_grpc_chatapp_proto_rawDescOnce sync.Once
@@ -281,22 +420,28 @@ func file_grpc_chatapp_proto_rawDescGZIP() []byte {
 	return file_grpc_chatapp_proto_rawDescData
 }
 
-var file_grpc_chatapp_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_grpc_chatapp_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_grpc_chatapp_proto_goTypes = []any{
-	(*ChatRoomMessage)(nil), // 0: chat.ChatRoomMessage
-	(*PrivateMessage)(nil),  // 1: chat.PrivateMessage
-	(*MessageResponse)(nil), // 2: chat.MessageResponse
-	(*LeaveRequest)(nil),    // 3: chat.LeaveRequest
+	(*JoinRequest)(nil),     // 0: chat.JoinRequest
+	(*ChatRoomMessage)(nil), // 1: chat.ChatRoomMessage
+	(*PrivateMessage)(nil),  // 2: chat.PrivateMessage
+	(*MessageResponse)(nil), // 3: chat.MessageResponse
+	(*LeaveRequest)(nil),    // 4: chat.LeaveRequest
+	(*Update)(nil),          // 5: chat.Update
 }
 var file_grpc_chatapp_proto_depIdxs = []int32{
-	0, // 0: chat.Chat.RoomChat:input_type -> chat.ChatRoomMessage
-	1, // 1: chat.Chat.SendPrivateMessage:input_type -> chat.PrivateMessage
-	3, // 2: chat.Chat.LeaveRoom:input_type -> chat.LeaveRequest
-	0, // 3: chat.Chat.RoomChat:output_type -> chat.ChatRoomMessage
-	2, // 4: chat.Chat.SendPrivateMessage:output_type -> chat.MessageResponse
-	2, // 5: chat.Chat.LeaveRoom:output_type -> chat.MessageResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	1, // 0: chat.Chat.RoomChat:input_type -> chat.ChatRoomMessage
+	2, // 1: chat.Chat.SendPrivateMessage:input_type -> chat.PrivateMessage
+	4, // 2: chat.Chat.LeaveChatRoom:input_type -> chat.LeaveRequest
+	0, // 3: chat.Chat.JoinRoom:input_type -> chat.JoinRequest
+	0, // 4: chat.Chat.BroadcastRoomUpdate:input_type -> chat.JoinRequest
+	1, // 5: chat.Chat.RoomChat:output_type -> chat.ChatRoomMessage
+	3, // 6: chat.Chat.SendPrivateMessage:output_type -> chat.MessageResponse
+	3, // 7: chat.Chat.LeaveChatRoom:output_type -> chat.MessageResponse
+	3, // 8: chat.Chat.JoinRoom:output_type -> chat.MessageResponse
+	5, // 9: chat.Chat.BroadcastRoomUpdate:output_type -> chat.Update
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -313,7 +458,7 @@ func file_grpc_chatapp_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_grpc_chatapp_proto_rawDesc), len(file_grpc_chatapp_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
