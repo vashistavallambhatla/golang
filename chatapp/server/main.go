@@ -44,7 +44,7 @@ func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb
 
 	room := joinReq.Room
 	sender := joinReq.Sender
-	
+
 	var users []string
 
 	if s.rooms[room] == nil {
@@ -59,13 +59,6 @@ func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb
 		return &pb.JoinRoomResponse{
 			Status:  "Failed",
 			Members: users,
-		}, errors.New("username already taken in this room")
-	}
-
-	if _, exists := s.rooms[room][sender]; exists {
-		return &pb.JoinRoomResponse{
-			Status: "Failed",
-			Members : users,
 		}, errors.New("username already taken in this room")
 	}
 
