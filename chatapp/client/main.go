@@ -33,7 +33,7 @@ func main() {
 	sender, _ := reader.ReadString('\n')
 	sender = strings.TrimSpace(sender)
 
-	rooms, err := client.GetAvailableRooms(context.Background(), &pb.Empty{})
+	rooms, err := client.GetExistingChatRooms(context.Background(), &pb.Empty{})
 	if err != nil {
 		log.Fatalf("Failed to fetch the rooms: %v", err)
 	}
@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to join room: %v", err)
 	}
-	log.Printf("You joined room: %s with %v other members in the room: %v", room,len(roomJoined.Members),roomJoined.Members)
+	log.Printf("You joined room %s with %v other members in the room: %v", room,len(roomJoined.Members),roomJoined.Members)
 
 	go func() {
 		<-signalChan
