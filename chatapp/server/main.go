@@ -16,7 +16,7 @@ import (
 
 type chatServer struct {
 	pb.UnimplementedChatServer
-	clients     map[string]map[string]chan *pb.ChatRoomMessage
+	rooms     map[string]map[string]chan *pb.ChatRoomMessage
 	activeUsers map[string]chan *pb.PrivateMessage
 	mu          sync.Mutex
 	updates     map[string]map[string]chan *pb.Update
@@ -24,7 +24,7 @@ type chatServer struct {
 
 func NewChatServer() *chatServer {
 	return &chatServer{
-		clients:     make(map[string]map[string]chan *pb.ChatRoomMessage),
+		rooms:     make(map[string]map[string]chan *pb.ChatRoomMessage),
 		activeUsers: make(map[string]chan *pb.PrivateMessage),
 		updates:     make(map[string]map[string]chan *pb.Update),
 	}
@@ -32,7 +32,7 @@ func NewChatServer() *chatServer {
 
 func (s *chatServer) GetAvailableRooms(ctx context.Context, _ *pb.Empty) (*pb.AvailableRooms, error) {
 	var rooms []string
-	for room := range s.clients {
+	for room := range s.rooms {
 		rooms = append(rooms, room)
 	}
 	return &pb.AvailableRooms{Rooms: rooms}, nil
@@ -46,19 +46,19 @@ func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb
 	sender := joinReq.Sender
 
 	fmt.Println(sender)
-	fmt.Println(s.clients)
+	fmt.Println(s.rooms)
 
-	if s.clients[room] == nil {
-		s.clients[room] = make(map[string]chan *pb.ChatRoomMessage)
+	if s.rooms[room] == nil {
+		s.rooms[room] = make(map[string]chan *pb.ChatRoomMessage)
 	}
 
-	if _, exists := s.clients[room][sender]; exists {
+	if _, exists := s.rooms[room][sender]; exists {
 		return &pb.MessageResponse{
 			Status: "Failed",
 		}, errors.New("username already taken in this room")
 	}
 
-	s.clients[room][sender] = make(chan *pb.ChatRoomMessage, 10)
+	s.rooms[room][sender] = make(chan *pb.ChatRoomMessage, 10)
 	s.activeUsers[sender] = make(chan *pb.PrivateMessage, 10)
 
 	if s.updates[room] == nil {
@@ -124,24 +124,24 @@ func (s *chatServer) LeaveChatRoom(ctx context.Context, leaveReq *pb.LeaveReques
 	sender := leaveReq.Sender
 	leaveType := leaveReq.Type
 
-	if _, exists := s.clients[room]; !exists {
+	if _, exists := s.rooms[room]; !exists {
 		return &pb.MessageResponse{Status: "Failed"}, errors.New("room does not exist")
 	}
 
-	if _, exists := s.clients[room][sender]; !exists {
+	if _, exists := s.rooms[room][sender]; !exists {
 		return &pb.MessageResponse{Status: "Failed"}, errors.New("user not in the room")
 	}
 
 	s.notifyRoomUpdate(room, sender, leaveType)
 
-	if ch := s.clients[room][sender]; ch != nil {
+	if ch := s.rooms[room][sender]; ch != nil {
 		close(ch)
 	}
 
-	delete(s.clients[room], sender)
+	delete(s.rooms[room], sender)
 
 	userInOtherRooms := false
-	for r, users := range s.clients {
+	for r, users := range s.rooms {
 		if r != room && users[sender] != nil {
 			userInOtherRooms = true
 			break
@@ -215,10 +215,10 @@ func (s *chatServer) RoomChat(stream pb.Chat_RoomChatServer) error {
 				sender = msg.Sender
 
 				s.mu.Lock()
-				if s.clients[room] == nil {
-					s.clients[room] = make(map[string]chan *pb.ChatRoomMessage)
+				if s.rooms[room] == nil {
+					s.rooms[room] = make(map[string]chan *pb.ChatRoomMessage)
 				}
-				s.clients[room][sender] = clientChan
+				s.rooms[room][sender] = clientChan
 				s.activeUsers[sender] = privateMessageChan
 				s.mu.Unlock()
 
@@ -226,7 +226,7 @@ func (s *chatServer) RoomChat(stream pb.Chat_RoomChatServer) error {
 			}
 
 			s.mu.Lock()
-			for user, ch := range s.clients[room] {
+			for user, ch := range s.rooms[room] {
 				if user != msg.Sender && ch != nil {
 
 					select {
@@ -240,10 +240,10 @@ func (s *chatServer) RoomChat(stream pb.Chat_RoomChatServer) error {
 		}
 
 		s.mu.Lock()
-		if s.clients[room] != nil {
-			delete(s.clients[room], sender)
-			if len(s.clients[room]) == 0 {
-				delete(s.clients, room)
+		if s.rooms[room] != nil {
+			delete(s.rooms[room], sender)
+			if len(s.rooms[room]) == 0 {
+				delete(s.rooms, room)
 			}
 		}
 		s.notifyRoomUpdate(room, sender, "left")
