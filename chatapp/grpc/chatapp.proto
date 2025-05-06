@@ -10,7 +10,7 @@ service Chat {
   rpc LeaveChatRoom(LeaveRequest) returns (MessageResponse); 
   rpc JoinRoom(JoinRequest) returns (JoinRoomResponse);
   rpc BroadcastRoomUpdate(JoinRequest) returns (stream Update);
-  rpc GetAvailableRooms(Empty) returns (AvailableRooms);
+  rpc GetExistingChatRooms(Empty) returns (AvailableRooms);
 }
 
 message Empty{}

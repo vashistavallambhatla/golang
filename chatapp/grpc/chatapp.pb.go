@@ -538,14 +538,14 @@ const file_chatapp_proto_rawDesc = "" +
 	"\x06update\x18\x01 \x01(\tR\x06update\x12\x16\n" +
 	"\x06sender\x18\x02 \x01(\tR\x06sender\x12\x12\n" +
 	"\x04room\x18\x03 \x01(\tR\x04room\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type2\xec\x02\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type2\xef\x02\n" +
 	"\x04Chat\x12<\n" +
 	"\bRoomChat\x12\x15.chat.ChatRoomMessage\x1a\x15.chat.ChatRoomMessage(\x010\x01\x12A\n" +
 	"\x12SendPrivateMessage\x12\x14.chat.PrivateMessage\x1a\x15.chat.MessageResponse\x12:\n" +
 	"\rLeaveChatRoom\x12\x12.chat.LeaveRequest\x1a\x15.chat.MessageResponse\x125\n" +
 	"\bJoinRoom\x12\x11.chat.JoinRequest\x1a\x16.chat.JoinRoomResponse\x128\n" +
-	"\x13BroadcastRoomUpdate\x12\x11.chat.JoinRequest\x1a\f.chat.Update0\x01\x126\n" +
-	"\x11GetAvailableRooms\x12\v.chat.Empty\x1a\x14.chat.AvailableRoomsB\x1cZ\x1aexample/hello/chatapp/grpcb\x06proto3"
+	"\x13BroadcastRoomUpdate\x12\x11.chat.JoinRequest\x1a\f.chat.Update0\x01\x129\n" +
+	"\x14GetExistingChatRooms\x12\v.chat.Empty\x1a\x14.chat.AvailableRoomsB\x1cZ\x1aexample/hello/chatapp/grpcb\x06proto3"
 
 var (
 	file_chatapp_proto_rawDescOnce sync.Once
@@ -577,13 +577,13 @@ var file_chatapp_proto_depIdxs = []int32{
 	7, // 2: chat.Chat.LeaveChatRoom:input_type -> chat.LeaveRequest
 	1, // 3: chat.Chat.JoinRoom:input_type -> chat.JoinRequest
 	1, // 4: chat.Chat.BroadcastRoomUpdate:input_type -> chat.JoinRequest
-	0, // 5: chat.Chat.GetAvailableRooms:input_type -> chat.Empty
+	0, // 5: chat.Chat.GetExistingChatRooms:input_type -> chat.Empty
 	3, // 6: chat.Chat.RoomChat:output_type -> chat.ChatRoomMessage
 	6, // 7: chat.Chat.SendPrivateMessage:output_type -> chat.MessageResponse
 	6, // 8: chat.Chat.LeaveChatRoom:output_type -> chat.MessageResponse
 	5, // 9: chat.Chat.JoinRoom:output_type -> chat.JoinRoomResponse
 	8, // 10: chat.Chat.BroadcastRoomUpdate:output_type -> chat.Update
-	2, // 11: chat.Chat.GetAvailableRooms:output_type -> chat.AvailableRooms
+	2, // 11: chat.Chat.GetExistingChatRooms:output_type -> chat.AvailableRooms
 	6, // [6:12] is the sub-list for method output_type
 	0, // [0:6] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

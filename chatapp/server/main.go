@@ -30,7 +30,7 @@ func NewChatServer() *chatServer {
 	}
 }
 
-func (s *chatServer) GetAvailableRooms(ctx context.Context, _ *pb.Empty) (*pb.AvailableRooms, error) {
+func (s *chatServer) GetExistingChatRooms(ctx context.Context, _ *pb.Empty) (*pb.AvailableRooms, error) {
 	var rooms []string
 	for room := range s.rooms {
 		rooms = append(rooms, room)
@@ -44,10 +44,7 @@ func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb
 
 	room := joinReq.Room
 	sender := joinReq.Sender
-
-	fmt.Println(sender)
-	fmt.Println(s.rooms)
-
+	
 	var users []string
 
 	if s.rooms[room] == nil {
