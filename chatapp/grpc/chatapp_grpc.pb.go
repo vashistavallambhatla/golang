@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.19.6
-// source: grpc/chatapp.proto
+// source: chatapp.proto
 
 package grpc
 
@@ -24,6 +24,7 @@ const (
 	Chat_LeaveChatRoom_FullMethodName       = "/chat.Chat/LeaveChatRoom"
 	Chat_JoinRoom_FullMethodName            = "/chat.Chat/JoinRoom"
 	Chat_BroadcastRoomUpdate_FullMethodName = "/chat.Chat/BroadcastRoomUpdate"
+	Chat_GetAvailableRooms_FullMethodName   = "/chat.Chat/GetAvailableRooms"
 )
 
 // ChatClient is the client API for Chat service.
@@ -35,6 +36,7 @@ type ChatClient interface {
 	LeaveChatRoom(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*MessageResponse, error)
 	JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*MessageResponse, error)
 	BroadcastRoomUpdate(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Update], error)
+	GetAvailableRooms(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AvailableRooms, error)
 }
 
 type chatClient struct {
@@ -107,6 +109,16 @@ func (c *chatClient) BroadcastRoomUpdate(ctx context.Context, in *JoinRequest, o
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Chat_BroadcastRoomUpdateClient = grpc.ServerStreamingClient[Update]
 
+func (c *chatClient) GetAvailableRooms(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AvailableRooms, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AvailableRooms)
+	err := c.cc.Invoke(ctx, Chat_GetAvailableRooms_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServer is the server API for Chat service.
 // All implementations must embed UnimplementedChatServer
 // for forward compatibility.
@@ -116,6 +128,7 @@ type ChatServer interface {
 	LeaveChatRoom(context.Context, *LeaveRequest) (*MessageResponse, error)
 	JoinRoom(context.Context, *JoinRequest) (*MessageResponse, error)
 	BroadcastRoomUpdate(*JoinRequest, grpc.ServerStreamingServer[Update]) error
+	GetAvailableRooms(context.Context, *Empty) (*AvailableRooms, error)
 	mustEmbedUnimplementedChatServer()
 }
 
@@ -140,6 +153,9 @@ func (UnimplementedChatServer) JoinRoom(context.Context, *JoinRequest) (*Message
 }
 func (UnimplementedChatServer) BroadcastRoomUpdate(*JoinRequest, grpc.ServerStreamingServer[Update]) error {
 	return status.Errorf(codes.Unimplemented, "method BroadcastRoomUpdate not implemented")
+}
+func (UnimplementedChatServer) GetAvailableRooms(context.Context, *Empty) (*AvailableRooms, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAvailableRooms not implemented")
 }
 func (UnimplementedChatServer) mustEmbedUnimplementedChatServer() {}
 func (UnimplementedChatServer) testEmbeddedByValue()              {}
@@ -234,6 +250,24 @@ func _Chat_BroadcastRoomUpdate_Handler(srv interface{}, stream grpc.ServerStream
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Chat_BroadcastRoomUpdateServer = grpc.ServerStreamingServer[Update]
 
+func _Chat_GetAvailableRooms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServer).GetAvailableRooms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Chat_GetAvailableRooms_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServer).GetAvailableRooms(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Chat_ServiceDesc is the grpc.ServiceDesc for Chat service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -253,6 +287,10 @@ var Chat_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "JoinRoom",
 			Handler:    _Chat_JoinRoom_Handler,
 		},
+		{
+			MethodName: "GetAvailableRooms",
+			Handler:    _Chat_GetAvailableRooms_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -267,5 +305,5 @@ var Chat_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "grpc/chatapp.proto",
+	Metadata: "chatapp.proto",
 }

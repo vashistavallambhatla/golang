@@ -10,11 +10,18 @@ service Chat {
   rpc LeaveChatRoom(LeaveRequest) returns (MessageResponse); 
   rpc JoinRoom(JoinRequest) returns (MessageResponse);
   rpc BroadcastRoomUpdate(JoinRequest) returns (stream Update);
+  rpc GetAvailableRooms(Empty) returns (AvailableRooms);
 }
+
+message Empty{}
 
 message JoinRequest {
     string sender = 1;
     string room = 2;
+}
+
+message AvailableRooms {
+  repeated string rooms = 1;
 }
 
 message ChatRoomMessage {

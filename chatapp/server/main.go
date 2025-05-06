@@ -30,6 +30,14 @@ func NewChatServer() *chatServer {
 	}
 }
 
+func (s *chatServer) GetAvailableRooms(ctx context.Context, _ *pb.Empty) (*pb.AvailableRooms, error) {
+	var rooms []string
+	for room := range s.clients {
+		rooms = append(rooms, room)
+	}
+	return &pb.AvailableRooms{Rooms: rooms}, nil
+}
+
 func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb.MessageResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

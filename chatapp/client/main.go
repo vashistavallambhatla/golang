@@ -33,10 +33,19 @@ func main() {
 	sender, _ := reader.ReadString('\n')
 	sender = strings.TrimSpace(sender)
 
-	log.Print("Enter room name to join: ")
+	rooms,err := client.GetAvailableRooms(context.Background(),&pb.Empty{})
+	if err != nil {
+		log.Fatalf("Failed to fetch the rooms: %v",err)
+	}
+
+	if len(rooms.Rooms) == 0 {
+		log.Print("No existing rooms found. You can create one by entering a room name.")
+	} else {
+		log.Printf("Available rooms: %v. You can also create your own room by entering a new room name.", rooms.Rooms)
+	}
+
 	room, _ := reader.ReadString('\n')
 	room = strings.TrimSpace(room)
-
 
 	_, err = client.JoinRoom(context.Background(), &pb.JoinRequest{Sender: sender, Room: room})
 	if err != nil {
