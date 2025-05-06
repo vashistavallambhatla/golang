@@ -281,6 +281,58 @@ func (x *PrivateMessage) GetContent() string {
 	return ""
 }
 
+type JoinRoomResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Members       []string               `protobuf:"bytes,2,rep,name=members,proto3" json:"members,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinRoomResponse) Reset() {
+	*x = JoinRoomResponse{}
+	mi := &file_chatapp_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinRoomResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinRoomResponse) ProtoMessage() {}
+
+func (x *JoinRoomResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_chatapp_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinRoomResponse.ProtoReflect.Descriptor instead.
+func (*JoinRoomResponse) Descriptor() ([]byte, []int) {
+	return file_chatapp_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *JoinRoomResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *JoinRoomResponse) GetMembers() []string {
+	if x != nil {
+		return x.Members
+	}
+	return nil
+}
+
 type MessageResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
@@ -290,7 +342,7 @@ type MessageResponse struct {
 
 func (x *MessageResponse) Reset() {
 	*x = MessageResponse{}
-	mi := &file_chatapp_proto_msgTypes[5]
+	mi := &file_chatapp_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -302,7 +354,7 @@ func (x *MessageResponse) String() string {
 func (*MessageResponse) ProtoMessage() {}
 
 func (x *MessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_chatapp_proto_msgTypes[5]
+	mi := &file_chatapp_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -315,7 +367,7 @@ func (x *MessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessageResponse.ProtoReflect.Descriptor instead.
 func (*MessageResponse) Descriptor() ([]byte, []int) {
-	return file_chatapp_proto_rawDescGZIP(), []int{5}
+	return file_chatapp_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MessageResponse) GetStatus() string {
@@ -336,7 +388,7 @@ type LeaveRequest struct {
 
 func (x *LeaveRequest) Reset() {
 	*x = LeaveRequest{}
-	mi := &file_chatapp_proto_msgTypes[6]
+	mi := &file_chatapp_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -348,7 +400,7 @@ func (x *LeaveRequest) String() string {
 func (*LeaveRequest) ProtoMessage() {}
 
 func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_chatapp_proto_msgTypes[6]
+	mi := &file_chatapp_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -361,7 +413,7 @@ func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRequest.ProtoReflect.Descriptor instead.
 func (*LeaveRequest) Descriptor() ([]byte, []int) {
-	return file_chatapp_proto_rawDescGZIP(), []int{6}
+	return file_chatapp_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LeaveRequest) GetSender() string {
@@ -397,7 +449,7 @@ type Update struct {
 
 func (x *Update) Reset() {
 	*x = Update{}
-	mi := &file_chatapp_proto_msgTypes[7]
+	mi := &file_chatapp_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -409,7 +461,7 @@ func (x *Update) String() string {
 func (*Update) ProtoMessage() {}
 
 func (x *Update) ProtoReflect() protoreflect.Message {
-	mi := &file_chatapp_proto_msgTypes[7]
+	mi := &file_chatapp_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -422,7 +474,7 @@ func (x *Update) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Update.ProtoReflect.Descriptor instead.
 func (*Update) Descriptor() ([]byte, []int) {
-	return file_chatapp_proto_rawDescGZIP(), []int{7}
+	return file_chatapp_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Update) GetUpdate() string {
@@ -472,7 +524,10 @@ const file_chatapp_proto_rawDesc = "" +
 	"\x0ePrivateMessage\x12\x16\n" +
 	"\x06sender\x18\x01 \x01(\tR\x06sender\x12\x1c\n" +
 	"\trecipient\x18\x02 \x01(\tR\trecipient\x12\x18\n" +
-	"\acontent\x18\x03 \x01(\tR\acontent\")\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\"D\n" +
+	"\x10JoinRoomResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
+	"\amembers\x18\x02 \x03(\tR\amembers\")\n" +
 	"\x0fMessageResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\"N\n" +
 	"\fLeaveRequest\x12\x16\n" +
@@ -483,12 +538,12 @@ const file_chatapp_proto_rawDesc = "" +
 	"\x06update\x18\x01 \x01(\tR\x06update\x12\x16\n" +
 	"\x06sender\x18\x02 \x01(\tR\x06sender\x12\x12\n" +
 	"\x04room\x18\x03 \x01(\tR\x04room\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type2\xeb\x02\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type2\xec\x02\n" +
 	"\x04Chat\x12<\n" +
 	"\bRoomChat\x12\x15.chat.ChatRoomMessage\x1a\x15.chat.ChatRoomMessage(\x010\x01\x12A\n" +
 	"\x12SendPrivateMessage\x12\x14.chat.PrivateMessage\x1a\x15.chat.MessageResponse\x12:\n" +
-	"\rLeaveChatRoom\x12\x12.chat.LeaveRequest\x1a\x15.chat.MessageResponse\x124\n" +
-	"\bJoinRoom\x12\x11.chat.JoinRequest\x1a\x15.chat.MessageResponse\x128\n" +
+	"\rLeaveChatRoom\x12\x12.chat.LeaveRequest\x1a\x15.chat.MessageResponse\x125\n" +
+	"\bJoinRoom\x12\x11.chat.JoinRequest\x1a\x16.chat.JoinRoomResponse\x128\n" +
 	"\x13BroadcastRoomUpdate\x12\x11.chat.JoinRequest\x1a\f.chat.Update0\x01\x126\n" +
 	"\x11GetAvailableRooms\x12\v.chat.Empty\x1a\x14.chat.AvailableRoomsB\x1cZ\x1aexample/hello/chatapp/grpcb\x06proto3"
 
@@ -504,29 +559,30 @@ func file_chatapp_proto_rawDescGZIP() []byte {
 	return file_chatapp_proto_rawDescData
 }
 
-var file_chatapp_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_chatapp_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_chatapp_proto_goTypes = []any{
-	(*Empty)(nil),           // 0: chat.Empty
-	(*JoinRequest)(nil),     // 1: chat.JoinRequest
-	(*AvailableRooms)(nil),  // 2: chat.AvailableRooms
-	(*ChatRoomMessage)(nil), // 3: chat.ChatRoomMessage
-	(*PrivateMessage)(nil),  // 4: chat.PrivateMessage
-	(*MessageResponse)(nil), // 5: chat.MessageResponse
-	(*LeaveRequest)(nil),    // 6: chat.LeaveRequest
-	(*Update)(nil),          // 7: chat.Update
+	(*Empty)(nil),            // 0: chat.Empty
+	(*JoinRequest)(nil),      // 1: chat.JoinRequest
+	(*AvailableRooms)(nil),   // 2: chat.AvailableRooms
+	(*ChatRoomMessage)(nil),  // 3: chat.ChatRoomMessage
+	(*PrivateMessage)(nil),   // 4: chat.PrivateMessage
+	(*JoinRoomResponse)(nil), // 5: chat.JoinRoomResponse
+	(*MessageResponse)(nil),  // 6: chat.MessageResponse
+	(*LeaveRequest)(nil),     // 7: chat.LeaveRequest
+	(*Update)(nil),           // 8: chat.Update
 }
 var file_chatapp_proto_depIdxs = []int32{
 	3, // 0: chat.Chat.RoomChat:input_type -> chat.ChatRoomMessage
 	4, // 1: chat.Chat.SendPrivateMessage:input_type -> chat.PrivateMessage
-	6, // 2: chat.Chat.LeaveChatRoom:input_type -> chat.LeaveRequest
+	7, // 2: chat.Chat.LeaveChatRoom:input_type -> chat.LeaveRequest
 	1, // 3: chat.Chat.JoinRoom:input_type -> chat.JoinRequest
 	1, // 4: chat.Chat.BroadcastRoomUpdate:input_type -> chat.JoinRequest
 	0, // 5: chat.Chat.GetAvailableRooms:input_type -> chat.Empty
 	3, // 6: chat.Chat.RoomChat:output_type -> chat.ChatRoomMessage
-	5, // 7: chat.Chat.SendPrivateMessage:output_type -> chat.MessageResponse
-	5, // 8: chat.Chat.LeaveChatRoom:output_type -> chat.MessageResponse
-	5, // 9: chat.Chat.JoinRoom:output_type -> chat.MessageResponse
-	7, // 10: chat.Chat.BroadcastRoomUpdate:output_type -> chat.Update
+	6, // 7: chat.Chat.SendPrivateMessage:output_type -> chat.MessageResponse
+	6, // 8: chat.Chat.LeaveChatRoom:output_type -> chat.MessageResponse
+	5, // 9: chat.Chat.JoinRoom:output_type -> chat.JoinRoomResponse
+	8, // 10: chat.Chat.BroadcastRoomUpdate:output_type -> chat.Update
 	2, // 11: chat.Chat.GetAvailableRooms:output_type -> chat.AvailableRooms
 	6, // [6:12] is the sub-list for method output_type
 	0, // [0:6] is the sub-list for method input_type
@@ -546,7 +602,7 @@ func file_chatapp_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_chatapp_proto_rawDesc), len(file_chatapp_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

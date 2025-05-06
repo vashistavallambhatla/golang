@@ -26,32 +26,32 @@ func main() {
 	client := pb.NewChatClient(conn)
 
 	reader := bufio.NewReader(os.Stdin)
-	signalChan := make(chan os.Signal,1)
-	signal.Notify(signalChan,os.Interrupt,syscall.SIGTERM)
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	log.Print("Enter your username: ")
 	sender, _ := reader.ReadString('\n')
 	sender = strings.TrimSpace(sender)
 
-	rooms,err := client.GetAvailableRooms(context.Background(),&pb.Empty{})
+	rooms, err := client.GetAvailableRooms(context.Background(), &pb.Empty{})
 	if err != nil {
-		log.Fatalf("Failed to fetch the rooms: %v",err)
+		log.Fatalf("Failed to fetch the rooms: %v", err)
 	}
 
 	if len(rooms.Rooms) == 0 {
 		log.Print("No existing rooms found. You can create one by entering a room name.")
 	} else {
-		log.Printf("Available rooms: %v. You can also create your own room by entering a new room name.", rooms.Rooms)
+		log.Printf("Available rooms: %v.Enter the room you want to join or you can also create your own room by entering a new room name.", rooms.Rooms)
 	}
 
 	room, _ := reader.ReadString('\n')
 	room = strings.TrimSpace(room)
 
-	_, err = client.JoinRoom(context.Background(), &pb.JoinRequest{Sender: sender, Room: room})
+	roomJoined, err := client.JoinRoom(context.Background(), &pb.JoinRequest{Sender: sender, Room: room})
 	if err != nil {
 		log.Fatalf("Failed to join room: %v", err)
 	}
-	log.Printf("You joined room: %s", room)
+	log.Printf("You joined room: %s with %v other members in the room: %v", room,len(roomJoined.Members),roomJoined.Members)
 
 	go func() {
 		<-signalChan
@@ -59,7 +59,7 @@ func main() {
 		_, err := client.LeaveChatRoom(context.Background(), &pb.LeaveRequest{
 			Sender: sender,
 			Room:   room,
-			Type: "sigexit",
+			Type:   "sigexit",
 		})
 		if err != nil {
 			log.Printf("Error leaving chat on Ctrl+C: %v", err)
@@ -67,11 +67,10 @@ func main() {
 		os.Exit(0)
 	}()
 
-	
 	go func() {
 		joinReq := &pb.JoinRequest{
 			Sender: sender,
-			Room: room,
+			Room:   room,
 		}
 		stream, err := client.BroadcastRoomUpdate(context.Background(), joinReq)
 		if err != nil {
@@ -85,7 +84,7 @@ func main() {
 				return
 			}
 			log.Printf("[UPDATE]: %s", update.Update)
-			if update.Type == "joined" && update.Sender == sender{
+			if update.Type == "joined" && update.Sender == sender {
 				fmt.Print("press ENTER to start chatting")
 			}
 		}
@@ -107,11 +106,10 @@ func main() {
 			if msg.Room == "private" {
 				format = "Private message from [%s]: %s"
 			}
-			log.Printf(format,msg.Sender,msg.Content)
+			log.Printf(format, msg.Sender, msg.Content)
 		}
 	}()
 
-	
 	for {
 		text, _ := reader.ReadString('\n')
 		text = strings.TrimSpace(text)
@@ -135,7 +133,6 @@ func main() {
 			}
 			continue
 		}
-
 
 		if text == "/exit" {
 			_, err := client.LeaveChatRoom(context.Background(), &pb.LeaveRequest{

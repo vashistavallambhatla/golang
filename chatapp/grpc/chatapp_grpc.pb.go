@@ -34,7 +34,7 @@ type ChatClient interface {
 	RoomChat(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ChatRoomMessage, ChatRoomMessage], error)
 	SendPrivateMessage(ctx context.Context, in *PrivateMessage, opts ...grpc.CallOption) (*MessageResponse, error)
 	LeaveChatRoom(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*MessageResponse, error)
-	JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinRoomResponse, error)
 	BroadcastRoomUpdate(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Update], error)
 	GetAvailableRooms(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AvailableRooms, error)
 }
@@ -80,9 +80,9 @@ func (c *chatClient) LeaveChatRoom(ctx context.Context, in *LeaveRequest, opts .
 	return out, nil
 }
 
-func (c *chatClient) JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+func (c *chatClient) JoinRoom(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinRoomResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MessageResponse)
+	out := new(JoinRoomResponse)
 	err := c.cc.Invoke(ctx, Chat_JoinRoom_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ type ChatServer interface {
 	RoomChat(grpc.BidiStreamingServer[ChatRoomMessage, ChatRoomMessage]) error
 	SendPrivateMessage(context.Context, *PrivateMessage) (*MessageResponse, error)
 	LeaveChatRoom(context.Context, *LeaveRequest) (*MessageResponse, error)
-	JoinRoom(context.Context, *JoinRequest) (*MessageResponse, error)
+	JoinRoom(context.Context, *JoinRequest) (*JoinRoomResponse, error)
 	BroadcastRoomUpdate(*JoinRequest, grpc.ServerStreamingServer[Update]) error
 	GetAvailableRooms(context.Context, *Empty) (*AvailableRooms, error)
 	mustEmbedUnimplementedChatServer()
@@ -148,7 +148,7 @@ func (UnimplementedChatServer) SendPrivateMessage(context.Context, *PrivateMessa
 func (UnimplementedChatServer) LeaveChatRoom(context.Context, *LeaveRequest) (*MessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveChatRoom not implemented")
 }
-func (UnimplementedChatServer) JoinRoom(context.Context, *JoinRequest) (*MessageResponse, error) {
+func (UnimplementedChatServer) JoinRoom(context.Context, *JoinRequest) (*JoinRoomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinRoom not implemented")
 }
 func (UnimplementedChatServer) BroadcastRoomUpdate(*JoinRequest, grpc.ServerStreamingServer[Update]) error {

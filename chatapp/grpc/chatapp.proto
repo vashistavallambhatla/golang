@@ -8,7 +8,7 @@ service Chat {
   rpc RoomChat(stream ChatRoomMessage) returns (stream ChatRoomMessage);
   rpc SendPrivateMessage(PrivateMessage) returns (MessageResponse);
   rpc LeaveChatRoom(LeaveRequest) returns (MessageResponse); 
-  rpc JoinRoom(JoinRequest) returns (MessageResponse);
+  rpc JoinRoom(JoinRequest) returns (JoinRoomResponse);
   rpc BroadcastRoomUpdate(JoinRequest) returns (stream Update);
   rpc GetAvailableRooms(Empty) returns (AvailableRooms);
 }
@@ -35,6 +35,11 @@ message PrivateMessage {
   string sender = 1;
   string recipient = 2;
   string content = 3;
+}
+
+message JoinRoomResponse {
+  string status = 1;
+  repeated string members = 2;
 }
 
 message MessageResponse {

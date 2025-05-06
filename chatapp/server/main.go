@@ -38,7 +38,7 @@ func (s *chatServer) GetAvailableRooms(ctx context.Context, _ *pb.Empty) (*pb.Av
 	return &pb.AvailableRooms{Rooms: rooms}, nil
 }
 
-func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb.MessageResponse, error) {
+func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb.JoinRoomResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -48,13 +48,27 @@ func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb
 	fmt.Println(sender)
 	fmt.Println(s.rooms)
 
+	var users []string
+
 	if s.rooms[room] == nil {
 		s.rooms[room] = make(map[string]chan *pb.ChatRoomMessage)
+	} else {
+		for user := range s.rooms[room] {
+			users = append(users, user)
+		}
+	}
+	
+	if _, exists := s.rooms[room][sender]; exists {
+		return &pb.JoinRoomResponse{
+			Status:  "Failed",
+			Members: users,
+		}, errors.New("username already taken in this room")
 	}
 
 	if _, exists := s.rooms[room][sender]; exists {
-		return &pb.MessageResponse{
+		return &pb.JoinRoomResponse{
 			Status: "Failed",
+			Members : users,
 		}, errors.New("username already taken in this room")
 	}
 
@@ -68,8 +82,9 @@ func (s *chatServer) JoinRoom(ctx context.Context, joinReq *pb.JoinRequest) (*pb
 
 	s.notifyRoomUpdate(room, sender, "joined")
 
-	return &pb.MessageResponse{
+	return &pb.JoinRoomResponse{
 		Status: "Success",
+		Members: users,
 	}, nil
 }
 
